@@ -31,7 +31,8 @@ class Detector():
             print("[INFO] Object found. Saving locally.")
             cv2.imwrite(filename, roi_color)
         else:
-            results['error'] = 'No faces detected'
+            results['acceptable'] = False
+            results['message'] = 'no face detected'
             return json.dumps(results)
 
         image = cv2.imread(filename)
@@ -60,7 +61,7 @@ class Detector():
             if (np.max(area_raw_saturation_regions) > min_area_bad_spot):
                 category = 2 # there is at least one spot
                 results['acceptable'] = False
-                results['issue'] = 'bright spot'
+                results['message'] = 'bright spot'
                 print("unacceptable bc bright spots")
 
         # Second test. Is the image dark?   
@@ -72,7 +73,7 @@ class Detector():
             if (mean_intensity < min_mean_intensity):
                 category = 3 # dark image
                 results['acceptable'] = False
-                results['issue'] = 'dark'
+                results['message'] = 'dark'
                 print("unacceptable bc dark")
 
         window_len = 15 # odd number
@@ -105,13 +106,13 @@ class Detector():
             if (selected_peaks.size>1):
                 category = 4 # there are shadows
                 results['acceptable'] = False
-                results['issue'] = 'shadows'
+                results['message'] = 'shadows'
                 print("unacceptable bc shadows")
 
         # all tests are passed. The image is ok
         if (category == 0):
             results['acceptable'] = True
-            results['issue'] = 'none'
+            results['message'] = 'image is ok'
             print("acceptable")
         
         json_data = json.dumps(results)
