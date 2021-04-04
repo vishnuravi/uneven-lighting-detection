@@ -12,9 +12,9 @@ class Detector():
         faceCascade = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_frontalface_default.xml")
         faces = faceCascade.detectMultiScale(
             gray,
-            scaleFactor=1.3,
-            minNeighbors=3,
-            minSize=(30, 30)
+            scaleFactor=1.5,
+            minNeighbors=5,
+            minSize=(200, 200)
         )
 
         filename = "cropped_face.jpg"
@@ -48,7 +48,7 @@ class Detector():
         width = image.shape[1]
 
         # First test. Does the image have any big white spots?
-        saturation_threshold = 250
+        saturation_threshold = 255
         raw_saturation_region = cv2.threshold(image_gray, saturation_threshold, 255,  cv2.THRESH_BINARY)[1]
         num_raw_saturation_regions, raw_saturation_regions,stats, _ = cv2.connectedComponentsWithStats(raw_saturation_region)
 
@@ -61,18 +61,19 @@ class Detector():
                 category = 2 # there is at least one spot
                 results['acceptable'] = False
                 results['issue'] = 'bright spot'
+                print("unacceptable bc bright spots")
 
         # Second test. Is the image dark?   
         min_mean_intensity = 60
 
         if category == 0 :    
             mean_intensity = np.mean(image_gray)
-            print("Mean Intensity: " + str(mean_intensity))
 
             if (mean_intensity < min_mean_intensity):
                 category = 3 # dark image
                 results['acceptable'] = False
                 results['issue'] = 'dark'
+                print("unacceptable bc dark")
 
         window_len = 15 # odd number
         delay = int((window_len-1)/2)  # delay is the shift introduced from the smoothing. It's half window_len
@@ -105,11 +106,13 @@ class Detector():
                 category = 4 # there are shadows
                 results['acceptable'] = False
                 results['issue'] = 'shadows'
+                print("unacceptable bc shadows")
 
         # all tests are passed. The image is ok
         if (category == 0):
             results['acceptable'] = True
             results['issue'] = 'none'
+            print("acceptable")
         
         json_data = json.dumps(results)
         return json_data
