@@ -4,6 +4,8 @@ import numpy as np
 import cv2
 from detector import Detector
 from flask_cors import CORS
+import boto3
+import yaml
 
 app = Flask(__name__)
 CORS(app)
@@ -26,6 +28,26 @@ def inference():
 
         print(output)
         return output
+
+@app.route('/process-s3/<object_name>', methods=['GET'])
+def inference_s3(object_name):
+
+    with open('config.yml', 'r') as ymlfile:
+        config = yaml.load(ymlfile, Loader=yaml.FullLoader)
+
+    s3 = boto3.client(
+        's3',
+        aws_access_key_id=config['s3']['aws_access_key_id'],
+        aws_secret_access_key=config['s3']['aws_secret_access_key']
+    )
+
+    s3.download_file(config['s3']['bucket_name'], object_name, 'photo.jpg')
+    img = cv2.imread('photo.jpg')
+    d = Detector()
+    output = d.process_image(img)
+
+    print(output)
+    return output
 
 # start flask server
 if __name__ == "__main__":
