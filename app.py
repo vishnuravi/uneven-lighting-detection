@@ -29,8 +29,8 @@ def inference():
         print(output)
         return output
 
-@app.route('/process-s3/<bucket_name>/<object_name>', methods=['GET'])
-def inference_s3(bucket_name, object_name):
+@app.route('/process-s3/<object_name>', methods=['GET'])
+def inference_s3(object_name):
 
     with open('config.yml', 'r') as ymlfile:
         config = yaml.load(ymlfile, Loader=yaml.FullLoader)
@@ -41,7 +41,7 @@ def inference_s3(bucket_name, object_name):
         aws_secret_access_key=config['s3']['aws_secret_access_key']
     )
 
-    s3.download_file(bucket_name, object_name, 'photo.jpg')
+    s3.download_file(config['s3']['bucket_name'], object_name, 'photo.jpg')
     img = cv2.imread('photo.jpg')
     d = Detector()
     output = d.process_image(img)
